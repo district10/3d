@@ -8,3 +8,4 @@
 -   [three.js/webgl_skinning_simple.html at master · mrdoob/three.js](https://github.com/mrdoob/three.js/blob/master/examples/webgl_skinning_simple.html)
 -   [http://stemkoski.github.io/Three.js/Marching-Cubes.html](view-source:http://stemkoski.github.io/Three.js/Marching-Cubes.html)
 -   [WebGL and Three.js: Texture Mapping - Blog - sdg](https://solutiondesign.com/blog/-/blogs/webgl-and-three-js-texture-mappi-1/)
+-   [glfx.js](http://evanw.github.io/glfx.js/demo/)

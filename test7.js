@@ -16,8 +16,10 @@ function test(name, geometry) {
 }
 
 
-test('new THREE.PlaneGeometry( 100, 100, 2, 2 )', new THREE.PlaneGeometry( 100, 100, 1, 1 ));
+test('new THREE.PlaneGeometry( 100, 100, 1, 1 )', new THREE.PlaneGeometry( 100, 100, 1, 1 ));
 test('new THREE.PlaneGeometry( 100, 100, 2, 2 )', new THREE.PlaneGeometry( 100, 100, 2, 2 ));
+test('new THREE.PlaneGeometry( 100, 100, 3, 2 )', new THREE.PlaneGeometry( 100, 100, 3, 2 ));
+test('new THREE.PlaneGeometry( 100, 100, 5, 4 )', new THREE.PlaneGeometry( 100, 100, 5, 4 ));
 
 test('new THREE.SphereGeometry( 75, 3, 2 )', new THREE.SphereGeometry( 75, 3, 2 ));
 test('new THREE.SphereGeometry( 75, 5, 3 )', new THREE.SphereGeometry( 75, 5, 3 ));

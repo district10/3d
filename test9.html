@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Test 9</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1">
+    <link rel="stylesheet" href="main.css" type="text/css" />
+</head>
+<body>
+
+<div id="container"></div>
+
+<script src="libs/jquery-3.1.0.min.js"></script>
+<script src="libs/three.js"></script>
+<script src="libs/dat.gui.min.js"></script>
+<script src="libs/OrbitControls.js"></script>
+<!--
+<script src="main.js"></script>
+-->
+<script>
+    // append log
+    var $log = $('<div class="log"><pre><code id="log"></code></pre></div>');
+    document.body.appendChild($log[0]);
+    function debug(msg) {
+        $("#log")[0].innerHTML = msg;
+    }
+    $log.css({
+        "position": "absolute",
+        "left": "0px",
+        "bottom": "0px",
+        "margin": "2px",
+        "padding": "2px",
+        "border": "1px solid white",
+        "color": "white",
+        "font-size": "8px",
+        "max-width": "50%",
+        "max-height": "60%",
+        "min-width": "200px",
+        "background-color": "rgba(0,0,0,0.4)",
+        "overflow-y": "auto"
+    });
+</script>
+
+<script src="test9.js"></script>
+
+</body>
+</html>

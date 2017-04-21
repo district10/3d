@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Test 8</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1">
+    <link rel="stylesheet" href="main.css" type="text/css" />
+</head>
+<body>
+
+<div id="container"></div>
+
+<script src="libs/jquery-3.1.0.min.js"></script>
+<script src="libs/three.js"></script>
+<script src="libs/dat.gui.min.js"></script>
+<script src="libs/OrbitControls.js"></script>
+<script src="libs/tween.min.js"></script>
+<!--
+<script src="main.js"></script>
+-->
+<script>
+    // append log
+    var $log = $('<div class="log"><pre><code id="log"></code></pre></div>');
+    document.body.appendChild($log[0]);
+    function debug(msg) {
+        $("#log")[0].innerHTML = msg;
+    }
+    $log.css({
+        "position": "absolute",
+        "left": "0px",
+        "bottom": "0px",
+        "margin": "2px",
+        "padding": "2px",
+        "border": "1px solid white",
+        "color": "white",
+        "font-size": "8px",
+        "max-width": "50%",
+        "max-height": "60%",
+        "min-width": "200px",
+        "background-color": "rgba(0,0,0,0.4)",
+        "overflow-y": "auto"
+    });
+</script>
+
+<script id="vertexShader" type="x-shader/x-vertex">
+    // uniform float mixAmount;
+    attribute vec3 endPosition;
+    varying vec2 vUv;
+
+    void main()
+    {
+        vUv = uv;
+        vec3 newPosition = mix( position, endPosition, mixAmount );
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+    }
+</script>
+
+<script id="fragmentShader" type="x-shader/x-vertex">
+    uniform sampler2D baseTexture;
+    varying vec2 vUv;
+
+    void main()
+    {
+        gl_FragColor = texture2D( baseTexture, vUv );
+    }
+</script>
+
+<script src="test8.js"></script>
+
+</body>
+</html>
