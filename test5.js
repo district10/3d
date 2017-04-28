@@ -23,9 +23,19 @@ var Config = function() {
     this.rotY = 0;
     this.useNormalMaterial = false;
     this.scale = 1;
+    this.showGrid = true;
+    this.saveImg = function(){
+        var url = config.renderer.domElement.toDataURL("image/png"); // .replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+        window.open(url, '_blank');
+        window.focus();
+    };
 };
 var config = new Config();
 var gui = new dat.GUI();
+gui.add(config, 'saveImg').name("导出图片");
+gui.add(config, 'showGrid').listen().onChange(function(vis){
+    config.ghXZ.visible = config.ghYZ.visible = config.ghXY.visible = vis;
+});
 gui.add(config, 'rotY').min(0).max(360).step(1).onChange(function(value){
     ball.rotation.y = THREE.Math.degToRad(value);
 }).name('Rot Y');
@@ -64,7 +74,7 @@ window.addEventListener('load', function() {
     container = document.getElementById( 'container' );
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
     camera.position.set(0,100,400);
-	camera.lookAt(scene.position);
+    camera.lookAt(scene.position);
 
     config.light = new THREE.PointLight(0xffffff);
     // light.position.set(0,0,0);
@@ -78,38 +88,38 @@ window.addEventListener('load', function() {
         config.ballGeoScaleZ
     );
 
-	var ballTexture = new THREE.TextureLoader().load('pano.jpg');
-	// use "this." to create global object
-	this.customUniforms = {
-		baseTexture: { type: "t", value: ballTexture },
-		mixAmount: { type: "f", value: 0.0 }
-	};
+    var ballTexture = new THREE.TextureLoader().load('pano.jpg');
+    // use "this." to create global object
+    this.customUniforms = {
+        baseTexture: { type: "t", value: ballTexture },
+        mixAmount: { type: "f", value: 0.0 }
+    };
 
-	// create custom material from the shader code above that is within specially labeled script tags
-	var customMaterial = new THREE.ShaderMaterial({
-	    uniforms: customUniforms,
-		vertexShader:   document.getElementById( 'vertexShader' ).textContent,
-		fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-		side: THREE.DoubleSide,
+    // create custom material from the shader code above that is within specially labeled script tags
+    var customMaterial = new THREE.ShaderMaterial({
+        uniforms: customUniforms,
+        vertexShader:   document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+        side: THREE.DoubleSide,
         wireframe: true
-	});
+    });
 
-	var customMaterial2 = new THREE.MeshNormalMaterial();
-	config.material1 = customMaterial;
+    var customMaterial2 = new THREE.MeshNormalMaterial();
+    config.material1 = customMaterial;
     config.material2 = customMaterial2;
 
-	ball = new THREE.Mesh( ballGeometry, customMaterial );
+    ball = new THREE.Mesh( ballGeometry, customMaterial );
     ball.scale.set(
         config.ballScaleX,
         config.ballScaleY,
         config.ballScaleZ
     );
-	// ball.position.set(0, 65, 0);
-	ball.rotation.set(0, -Math.PI / 2, 0);
-	scene.add( ball );
+    // ball.position.set(0, 65, 0);
+    ball.rotation.set(0, -Math.PI / 2, 0);
+    scene.add( ball );
 
-	var axisHelper = new THREE.AxisHelper(500);
-	scene.add(axisHelper);
+    var axisHelper = new THREE.AxisHelper(500);
+    scene.add(axisHelper);
 
     (config.ghXZ = new THREE.GridHelper(300, 10, 0x00ff00, 0x00ff00));
     (config.ghYZ = new THREE.GridHelper(300, 10, 0xff0000, 0xff0000)).rotateZ(-Math.PI/2);
@@ -117,8 +127,11 @@ window.addEventListener('load', function() {
     scene.add(config.ghXZ).add(config.ghYZ).add(config.ghXY);
 
     renderer = new THREE.WebGLRenderer({
-        antialias: true
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
     });
+    config.renderer = renderer;
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.domElement.style.position = 'absolute';

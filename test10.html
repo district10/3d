@@ -8,20 +8,21 @@
     <style>
         .pic {
             position: absolute;
-            right: 0px;
-            bottom: 0px;
+            left: 0px;
             margin: 2px;
             padding: 2px;
             border: 1px solid white;
         }
+        #left { top: 0px; }
+        #right { bottom: 0px; }
     </style>
 </head>
 <body>
 
 <div id="container"></div>
 
-
-<div class="pic"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Eulerangles.svg/450px-Eulerangles.svg.png" /></div>
+<div class="pic" id="left"><img width="300px" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Euler2a.gif/255px-Euler2a.gif" /></div>
+<div class="pic" id="right"><img width="300px" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Eulerangles.svg/450px-Eulerangles.svg.png" /></div>
 
 <script src="libs/jquery-3.1.0.min.js"></script>
 <script src="libs/three.js"></script>
