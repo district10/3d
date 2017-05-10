@@ -25,7 +25,7 @@ var Config = function() {
     });
     this.materialB = _this.materialA.clone();
     this.materialA.transparent = true;
-    // this.materialB.transparent = false;
+    this.materialB.transparent = false;
     this.alpha = 0;
 
     this.wireframe = false;
