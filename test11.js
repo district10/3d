@@ -17,7 +17,6 @@ var Util = {
 var Config = function() {
     var _this = this;
     this.n = 5;
-    this.radius = 500;
 
     this.materialA = new THREE.MeshBasicMaterial( {
         side: THREE.DoubleSide,
@@ -30,12 +29,8 @@ var Config = function() {
 
     this.wireframe = false;
     this.onWireframeChange = function() {
-        if (triMesh !== undefined && triMesh.group.children.length > 0) {
-            triMesh.mesh.material.wireframe = _this.wireframe;
-        }
-        if (triMesh2 !== undefined && triMesh2.group.children.length > 0) {
-            triMesh2.mesh.material.wireframe = _this.wireframe;
-        }
+        config.materialA.wireframe = config.wireframe;
+        config.materialB.wireframe = config.wireframe;
     };
 
     this.point = new THREE.SphereGeometry( 10, 64, 32 );
@@ -61,46 +56,42 @@ var Config = function() {
         mesh: new THREE.Mesh(_this.point, _this.cMat)
     };
     this.onChangeN = function() {
-        triMesh.init(
+        dualTriMesh.init(
             _this.A.mesh.position,
             _this.B.mesh.position,
             _this.C.mesh.position,
-            { x: 0.5054, y: 0.5947 },
-            { x: 0.4795, y: 0.3896 },
-            { x: 0.5752, y: 0.3852 },
-            config.materialA, config.n
-        );
-        triMesh2.init(
-            _this.A.mesh.position,
-            _this.B.mesh.position,
-            _this.C.mesh.position,
-            { x: 0.2054, y: 0.5947 },
-            { x: 0.1795, y: 0.3896 },
-            { x: 0.2752, y: 0.3852 },
-            config.materialB, config.n
+            {
+                uv1: { x: 0.5054, y: 0.5947 },
+                uv2: { x: 0.4795, y: 0.3896 },
+                uv3: { x: 0.5752, y: 0.3852 },
+                material: config.materialA
+            },
+            {
+                uv1: { x: 0.4054, y: 0.5947 },
+                uv2: { x: 0.3795, y: 0.3896 },
+                uv3: { x: 0.4752, y: 0.3852 },
+                material: config.materialB
+            },
+            config.n
         );
     };
     this.update = function (){
-        _this.A.mesh.position.copy(Util.lonlat2xyz(_this.A.lon, _this.A.lat, _this.radius));
-        _this.B.mesh.position.copy(Util.lonlat2xyz(_this.B.lon, _this.B.lat, _this.radius));
-        _this.C.mesh.position.copy(Util.lonlat2xyz(_this.C.lon, _this.C.lat, _this.radius));
-        if (triMesh !== undefined && triMesh.update !== undefined) {
-            triMesh.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
-        }
-        if (triMesh2 !== undefined && triMesh2.update !== undefined) {
-            triMesh2.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
+        _this.A.mesh.position.copy(Util.lonlat2xyz(_this.A.lon, _this.A.lat, dualTriMesh.radius));
+        _this.B.mesh.position.copy(Util.lonlat2xyz(_this.B.lon, _this.B.lat, dualTriMesh.radius));
+        _this.C.mesh.position.copy(Util.lonlat2xyz(_this.C.lon, _this.C.lat, dualTriMesh.radius));
+        if (dualTriMesh !== undefined) {
+            dualTriMesh.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
         }
     };
-    this.update();
 };
 var config = new Config();
 
-var TriMesh = function(n, radius) {
+var TriMesh = function(n, radius, useVertexNormals) {
     var _this = this;
-    this.n = n || 5;
-    this.radius = radius || 500;
+    this.n = n;
+    this.radius = radius;
     this.group = new THREE.Group();
-    this.useVertexNormals = false;
+    this.useVertexNormals = useVertexNormals || false;
 
     this.index = function(i,j) {
         return parseInt(i*(i+1)/2+j);
@@ -146,9 +137,9 @@ var TriMesh = function(n, radius) {
     };
     this.update = function(a,b,c) {
         var n = _this.n;
-        if (a !== undefined) { _this.a.copy(a); }
-        if (b !== undefined) { _this.b.copy(b); }
-        if (c !== undefined) { _this.c.copy(c); }
+        _this.a.copy(a);
+        _this.b.copy(b);
+        _this.c.copy(c);
         if (_this.group.children.length > 0) {
             var mesh = _this.group.children[0];
             _this.traverse(function(i,j){
@@ -165,15 +156,15 @@ var TriMesh = function(n, radius) {
         }
     };
     this.init = function(a,b,c, uv1, uv2, uv3, material, n, radius) {
-        if (a !== undefined) { _this.a.copy(a); }
-        if (b !== undefined) { _this.b.copy(b); }
-        if (c !== undefined) { _this.c.copy(c); }
-        if (uv1 !== undefined) { _this.uv1.copy(uv1); }
-        if (uv2 !== undefined) { _this.uv2.copy(uv2); }
-        if (uv3 !== undefined) { _this.uv3.copy(uv3); }
-        _this.material = material = (material || new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide, wireframe: true}));
-        _this.n = n = (n || _this.n);
-        _this.radius = radius = (radius || _this.radius);
+        _this.a.copy(a);
+        _this.b.copy(b);
+        _this.c.copy(c);
+        _this.uv1.copy(uv1);
+        _this.uv2.copy(uv2);
+        _this.uv3.copy(uv3);
+        _this.material = material;
+        _this.n = n;
+        _this.radius = radius;
 
         _this.group.children = [];
         var geometry = new THREE.Geometry();
@@ -236,8 +227,46 @@ var TriMesh = function(n, radius) {
         _this.group.add(mesh);
     };
 };
-var triMesh = new TriMesh(10, 300);
-var triMesh2 = new TriMesh(10, 500);
+
+var DualTriMesh = function(n, radius, useVertexNormals) {
+    if (n === undefined) { n = 5; }
+    if (radius === undefined) { radius = 500; }
+    if (useVertexNormals === undefined) { useVertexNormals = false; }
+    var _this = this;
+    this.n = n;
+    this.radius = radius;
+    this.group = new THREE.Group();
+    this.useVertexNormals = useVertexNormals;
+
+    this.triMesh1 = new TriMesh(_this.n, _this.radius*1.0, _this.useVertexNormals);
+    this.triMesh2 = new TriMesh(_this.n, _this.radius*1.2, _this.useVertexNormals);
+    this.group.add(_this.triMesh1.group);
+    this.group.add(_this.triMesh2.group);
+    this.update = function(a,b,c) {
+        _this.triMesh1.update(a,b,c);
+        _this.triMesh2.update(a,b,c);
+    };
+    this.init = function(a,b,c, config1, config2, n, radius) {
+        if (n === undefined) { n = 5; }
+        if (radius === undefined) { radius = 500; }
+        _this.n = n;
+        _this.radius = radius;
+        _this.triMesh1.init(
+            a, b, c,
+            config1.uv1, config1.uv2, config1.uv3, config1.material,
+            _this.n, _this.radius*1.0
+        );
+        _this.triMesh2.init(
+            a, b, c,
+            config2.uv1, config2.uv2, config2.uv3, config2.material,
+            _this.n, _this.radius*1.2
+        );
+    };
+};
+
+var dualTriMesh = new DualTriMesh(10, 400);
+config.update();
+
 var gui = new dat.GUI();
 
 gui.add(config, 'n').min(2).max(20).step(1).onChange(config.onChangeN);
@@ -262,8 +291,7 @@ window.addEventListener('load', function() {
 
     scene = new THREE.Scene();
 
-    scene.add(triMesh.group);
-    scene.add(triMesh2.group);
+    scene.add(dualTriMesh.group);
 
     scene.add(config.A.mesh);
     scene.add(config.B.mesh);
@@ -280,7 +308,7 @@ window.addEventListener('load', function() {
 
     scene.add(config.axisHelper = new THREE.AxisHelper(500));
 
-    var geometry = new THREE.SphereGeometry( config.radius*2, 64, 32 ); geometry.scale( - 1, 1, 1 );
+    var geometry = new THREE.SphereGeometry( dualTriMesh.radius*2 || 1000, 64, 32 ); geometry.scale( - 1, 1, 1 );
     var material = new THREE.MeshBasicMaterial( {
         map: new THREE.TextureLoader().load( 'pano.jpg' ),
         side: THREE.DoubleSide
