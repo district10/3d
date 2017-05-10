@@ -16,7 +16,7 @@ var Util = {
 
 var Config = function() {
     var _this = this;
-    this.n = 5;
+    this.n = 10;
 
     this.materialA = new THREE.MeshBasicMaterial( {
         side: THREE.DoubleSide,
@@ -229,14 +229,23 @@ var TriMesh = function(n, radius, useVertexNormals) {
 };
 
 var DualTriMesh = function(n, radius, useVertexNormals) {
-    if (n === undefined) { n = 5; }
-    if (radius === undefined) { radius = 500; }
-    if (useVertexNormals === undefined) { useVertexNormals = false; }
     var _this = this;
-    this.n = n;
-    this.radius = radius;
+    if (n === undefined) {
+        _this.n = 5;
+    } else {
+        _this.n = n;
+    }
+    if (radius === undefined) {
+        _this.radius = 500;
+    } else {
+        _this.radius = radius;
+    }
+    if (useVertexNormals === undefined) {
+        _this.useVertexNormals = false;
+    } else {
+        _this.useVertexNormals = useVertexNormals;
+    }
     this.group = new THREE.Group();
-    this.useVertexNormals = useVertexNormals;
 
     this.triMesh1 = new TriMesh(_this.n, _this.radius*1.0, _this.useVertexNormals);
     this.triMesh2 = new TriMesh(_this.n, _this.radius*1.2, _this.useVertexNormals);
@@ -247,10 +256,8 @@ var DualTriMesh = function(n, radius, useVertexNormals) {
         _this.triMesh2.update(a,b,c);
     };
     this.init = function(a,b,c, config1, config2, n, radius) {
-        if (n === undefined) { n = 5; }
-        if (radius === undefined) { radius = 500; }
-        _this.n = n;
-        _this.radius = radius;
+        if (n !== undefined) { _this.n = n; }
+        if (radius !== undefined) { _this.radius = radius; }
         _this.triMesh1.init(
             a, b, c,
             config1.uv1, config1.uv2, config1.uv3, config1.material,
