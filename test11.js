@@ -74,7 +74,7 @@ var Config = function() {
             _this.B.mesh.position,
             _this.C.mesh.position,
             { x: 0.2054, y: 0.5947 },
-            { x: 0.2795, y: 0.3896 },
+            { x: 0.1795, y: 0.3896 },
             { x: 0.2752, y: 0.3852 },
             config.materialB, config.n
         );
