@@ -19,10 +19,21 @@ var Config = function() {
     this.n = 5;
     this.radius = 500;
 
+    this.materialA = new THREE.MeshBasicMaterial( {
+        side: THREE.DoubleSide,
+        map: new THREE.TextureLoader().load("texture.jpg"),
+    });
+    this.materialA.transparent = true;
+    this.materialB = this.materialA.clone();
+    this.alpha = 0;
+
     this.wireframe = false;
     this.onWireframeChange = function() {
         if (triMesh !== undefined && triMesh.group.children.length > 0) {
-            triMesh.group.children[0].material.wireframe = _this.wireframe;
+            triMesh.mesh.material.wireframe = _this.wireframe;
+        }
+        if (triMesh2 !== undefined && triMesh2.group.children.length > 0) {
+            triMesh2.mesh.material.wireframe = _this.wireframe;
         }
     };
 
@@ -49,36 +60,45 @@ var Config = function() {
         mesh: new THREE.Mesh(_this.point, _this.cMat)
     };
     this.onChangeN = function() {
-        triMesh.n = _this.n;
-        _this.init();
-    };
-    this.apply = function (){
-        _this.A.mesh.position.copy(Util.lonlat2xyz(_this.A.lon, _this.A.lat, _this.radius));
-        _this.B.mesh.position.copy(Util.lonlat2xyz(_this.B.lon, _this.B.lat, _this.radius));
-        _this.C.mesh.position.copy(Util.lonlat2xyz(_this.C.lon, _this.C.lat, _this.radius));
-        if (triMesh !== undefined && triMesh.update !== undefined) {
-            triMesh.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
-        }
-    };
-    this.apply();
-    this.init = function() {
         triMesh.init(
             _this.A.mesh.position,
             _this.B.mesh.position,
             _this.C.mesh.position,
             { x: 0.5054, y: 0.5947 },
             { x: 0.4795, y: 0.3896 },
-            { x: 0.5752, y: 0.3852 }
+            { x: 0.5752, y: 0.3852 },
+            config.materialA, config.n
+        );
+        triMesh2.init(
+            _this.A.mesh.position,
+            _this.B.mesh.position,
+            _this.C.mesh.position,
+            { x: 0.2054, y: 0.5947 },
+            { x: 0.2795, y: 0.3896 },
+            { x: 0.2752, y: 0.3852 },
+            config.materialB, config.n
         );
     };
+    this.update = function (){
+        _this.A.mesh.position.copy(Util.lonlat2xyz(_this.A.lon, _this.A.lat, _this.radius));
+        _this.B.mesh.position.copy(Util.lonlat2xyz(_this.B.lon, _this.B.lat, _this.radius));
+        _this.C.mesh.position.copy(Util.lonlat2xyz(_this.C.lon, _this.C.lat, _this.radius));
+        if (triMesh !== undefined && triMesh.update !== undefined) {
+            triMesh.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
+        }
+        if (triMesh2 !== undefined && triMesh2.update !== undefined) {
+            triMesh2.update(_this.A.mesh.position, _this.B.mesh.position, _this.C.mesh.position);
+        }
+    };
+    this.update();
 };
 var config = new Config();
 
-var TriMesh = function(seg) {
+var TriMesh = function(n, radius) {
     var _this = this;
-    this.n = seg || 5;
+    this.n = n || 5;
+    this.radius = radius || 500;
     this.group = new THREE.Group();
-    this.radius = 500;
 
     this.index = function(i,j) {
         return parseInt(i*(i+1)/2+j);
@@ -92,8 +112,8 @@ var TriMesh = function(seg) {
         };
     };
     this.traverse = function(cb) {
-        var cb = cb || function(){};
         var n = _this.n;
+        var cb = cb || function(){};
         for (var i = 0; i <= n-1; ++i) {
             for (var j = 0; j <= i; ++j) {
                 cb(i,j);
@@ -107,16 +127,17 @@ var TriMesh = function(seg) {
     this.uv2 = new THREE.Vector2();
     this.uv3 = new THREE.Vector2();
     this.position = function(i,j) {
-        var v = new THREE.Vector3();
         var b = _this.bary(i,j);
+        var v = new THREE.Vector3();
         v.x = b.x*_this.a.x + b.y*_this.b.x + b.z*_this.c.x;
         v.y = b.x*_this.a.y + b.y*_this.b.y + b.z*_this.c.y;
         v.z = b.x*_this.a.z + b.y*_this.b.z + b.z*_this.c.z;
+        // todo: use lerp
         return v;
     };
     this.uv = function(i,j) {
-        var v = new THREE.Vector2();
         var b = _this.bary(i,j);
+        var v = new THREE.Vector2();
         v.x = b.x*_this.uv1.x + b.y*_this.uv2.x + b.z*_this.uv3.x;
         v.y = b.x*_this.uv1.y + b.y*_this.uv2.y + b.z*_this.uv3.y;
         return v;
@@ -126,8 +147,8 @@ var TriMesh = function(seg) {
         if (a !== undefined) { _this.a.copy(a); }
         if (b !== undefined) { _this.b.copy(b); }
         if (c !== undefined) { _this.c.copy(c); }
-        if (triMesh.group.children.length > 0) {
-            var mesh = triMesh.group.children[0];
+        if (_this.group.children.length > 0) {
+            var mesh = _this.group.children[0];
             _this.traverse(function(i,j){
                 var index = _this.index(i,j);
                 mesh.geometry.vertices[index].copy(_this.position(i,j).setLength(_this.radius));
@@ -137,14 +158,17 @@ var TriMesh = function(seg) {
             mesh.geometry.normalsNeedUpdate = true;
         }
     };
-    this.init = function(a,b,c, uv1, uv2, uv3) {
-        var n = _this.n;
+    this.init = function(a,b,c, uv1, uv2, uv3, material, n, radius) {
         if (a !== undefined) { _this.a.copy(a); }
         if (b !== undefined) { _this.b.copy(b); }
         if (c !== undefined) { _this.c.copy(c); }
         if (uv1 !== undefined) { _this.uv1.copy(uv1); }
         if (uv2 !== undefined) { _this.uv2.copy(uv2); }
         if (uv3 !== undefined) { _this.uv3.copy(uv3); }
+        _this.material = material = (material || new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide, wireframe: true}));
+        _this.n = n = (n || _this.n);
+        _this.radius = radius = (radius || _this.radius);
+
         _this.group.children = [];
         var geometry = new THREE.Geometry();
         geometry.vertexNormals = [];
@@ -195,46 +219,27 @@ var TriMesh = function(seg) {
             }
         }
 
-        var material = config.material;
-
         var mesh = new THREE.Mesh(geometry,material);
-        config.mesh = mesh;
+        _this.mesh = mesh;
         _this.group.add(mesh);
     };
 };
-var triMesh = new TriMesh(5);
-
+var triMesh = new TriMesh(10, 300);
+var triMesh2 = new TriMesh(10, 500);
 var gui = new dat.GUI();
 
 gui.add(config, 'n').min(2).max(20).step(1).onChange(config.onChangeN);
-gui.add(config.A, 'lon').min(-45).max(45).step(0.1).listen().name("A.lon").onChange(config.apply);
-gui.add(config.A, 'lat').min(-45).max(45).step(0.1).listen().name("A.lat").onChange(config.apply);
-gui.add(config.B, 'lon').min(-45).max(45).step(0.1).listen().name("B.lon").onChange(config.apply);
-gui.add(config.B, 'lat').min(-45).max(45).step(0.1).listen().name("B.lat").onChange(config.apply);
-gui.add(config.C, 'lon').min(-45).max(45).step(0.1).listen().name("C.lon").onChange(config.apply);
-gui.add(config.C, 'lat').min(-45).max(45).step(0.1).listen().name("C.lat").onChange(config.apply);
-// gui.add(config, 'init').name("初始化");
 gui.add(config, 'wireframe').listen().onChange(config.onWireframeChange);
-
-var newTriangleWithNormal = function(a,b,c) { // a,b,c
-    var geometry = new THREE.Geometry();
-    geometry.vertices.push(a.clone());
-    geometry.vertices.push(b.clone());
-    geometry.vertices.push(c.clone());
-    geometry.faces.push( new THREE.Face3(0,1,2) );
-    return geometry;
-    /*
-    var geometry = new THREE.BufferGeometry();
-     var positions = [ a.x,a.y,a.z, b.x,b.y,b.z, c.x,c.y,c.z ];
-     var an = a.clone().negate().normalize(),
-     bn = b.clone().negate().normalize(),
-     cn = c.clone().negate().normalize();
-     var normals = [ an.x,an.y,an.z, bn.x, bn.y, bn.z, cn.x, cn.y, cn.z ];
-     geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
-     geometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-    */
-    // geometry.vertexNormals = [ a.clone().negate().normalize(), b.clone().negate().normalize(), c.clone().negate().normalize() ];
-};
+gui.add(config, 'alpha').min(0).max(1).step(0.01).listen().onChange(function(){
+    config.materialA.opacity = 1-config.alpha;
+});
+var edit = gui.addFolder("调整 ABC");
+edit.add(config.A, 'lon').min(-45).max(45).step(0.1).listen().name("A.lon").onChange(config.update);
+edit.add(config.A, 'lat').min(-45).max(45).step(0.1).listen().name("A.lat").onChange(config.update);
+edit.add(config.B, 'lon').min(-45).max(45).step(0.1).listen().name("B.lon").onChange(config.update);
+edit.add(config.B, 'lat').min(-45).max(45).step(0.1).listen().name("B.lat").onChange(config.update);
+edit.add(config.C, 'lon').min(-45).max(45).step(0.1).listen().name("C.lon").onChange(config.update);
+edit.add(config.C, 'lat').min(-45).max(45).step(0.1).listen().name("C.lat").onChange(config.update);
 
 window.addEventListener('load', function() {
     var animate = function(){
@@ -246,6 +251,7 @@ window.addEventListener('load', function() {
     scene = new THREE.Scene();
 
     scene.add(triMesh.group);
+    scene.add(triMesh2.group);
 
     scene.add(config.A.mesh);
     scene.add(config.B.mesh);
@@ -260,36 +266,15 @@ window.addEventListener('load', function() {
     light.position.set(0,0,0);
     scene.add(light);
 
-    (config.ghXZ = new THREE.GridHelper(300, 10, 0x00ff00, 0x00ff00));
-    (config.ghYZ = new THREE.GridHelper(300, 10, 0xff0000, 0xff0000)).rotateZ(-Math.PI/2);
-    (config.ghXY = new THREE.GridHelper(300, 10, 0x0000ff, 0x0000ff)).rotateX(Math.PI/2).rotateY(-Math.PI/2);
-    scene.add(config.ghXZ).add(config.ghYZ).add(config.ghXY);
     scene.add(config.axisHelper = new THREE.AxisHelper(500));
 
-    var geometry = newTriangleWithNormal(
-            new THREE.Vector3(30,0,100),
-            new THREE.Vector3(-30,0,100),
-            new THREE.Vector3(0,40,100)
-    );
-    var material = new THREE.MeshBasicMaterial( {
-        side: THREE.DoubleSide,
-        map: new THREE.TextureLoader().load("texture.jpg"),
-    });
-    var mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
     var geometry = new THREE.SphereGeometry( config.radius*2, 64, 32 ); geometry.scale( - 1, 1, 1 );
-    // var material = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide, wireframe: true } );
     var material = new THREE.MeshBasicMaterial( {
         map: new THREE.TextureLoader().load( 'pano.jpg' ),
         side: THREE.DoubleSide
     } );
     var mesh = new THREE.Mesh( geometry, material );
     scene.add( mesh );
-
-    config.material = material.clone();
-    config.material.transparent = true;
-    // config.material.opacity = 0.5;
     config.sphere = mesh;
 
     renderer = new THREE.WebGLRenderer({
@@ -309,7 +294,7 @@ window.addEventListener('load', function() {
         renderer.setSize( window.innerWidth, window.innerHeight );
     }, false);
 
-    config.init();
+    config.onChangeN();
     animate();
 
 }, false);
