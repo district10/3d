@@ -23,8 +23,9 @@ var Config = function() {
         side: THREE.DoubleSide,
         map: new THREE.TextureLoader().load("texture.jpg"),
     });
+    this.materialB = _this.materialA.clone();
     this.materialA.transparent = true;
-    this.materialB = this.materialA.clone();
+    // this.materialB.transparent = false;
     this.alpha = 0;
 
     this.wireframe = false;
@@ -99,6 +100,7 @@ var TriMesh = function(n, radius) {
     this.n = n || 5;
     this.radius = radius || 500;
     this.group = new THREE.Group();
+    this.useVertexNormals = false;
 
     this.index = function(i,j) {
         return parseInt(i*(i+1)/2+j);
@@ -152,10 +154,14 @@ var TriMesh = function(n, radius) {
             _this.traverse(function(i,j){
                 var index = _this.index(i,j);
                 mesh.geometry.vertices[index].copy(_this.position(i,j).setLength(_this.radius));
-                mesh.geometry.vertexNormals[index].copy(mesh.geometry.vertices[index].clone().negate().normalize());
+                if (_this.useVertexNormals) {
+                    mesh.geometry.vertexNormals[index].copy(mesh.geometry.vertices[index].clone().negate().normalize());
+                }
             });
             mesh.geometry.verticesNeedUpdate = true;
-            mesh.geometry.normalsNeedUpdate = true;
+            if (_this.useVertexNormals) {
+                mesh.geometry.normalsNeedUpdate = true;
+            }
         }
     };
     this.init = function(a,b,c, uv1, uv2, uv3, material, n, radius) {
@@ -171,14 +177,20 @@ var TriMesh = function(n, radius) {
 
         _this.group.children = [];
         var geometry = new THREE.Geometry();
-        geometry.vertexNormals = [];
+        if (_this.useVertexNormals) {
+            geometry.vertexNormals = [];
+        }
         _this.traverse(function(i,j){
             var v = _this.position(i,j);
             geometry.vertices.push(v.setLength(_this.radius));
-            geometry.vertexNormals.push(v.clone().negate().normalize());
+            if (_this.useVertexNormals) {
+                geometry.vertexNormals.push(v.clone().negate().normalize());
+            }
         });
         geometry.verticesNeedUpdate = true;
-        geometry.normalsNeedUpdate = true;
+        if (_this.useVertexNormals) {
+            geometry.normalsNeedUpdate = true;
+        }
         geometry.faceVertexUvs[0] = [];
         for (var i = 1; i <= n-1; ++i) {
             for (var j = 0; j < i; ++j) {
@@ -276,6 +288,8 @@ window.addEventListener('load', function() {
     var mesh = new THREE.Mesh( geometry, material );
     scene.add( mesh );
     config.sphere = mesh;
+
+
 
     renderer = new THREE.WebGLRenderer({
         antialias: true
